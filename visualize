@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Visualizer – 4 K 30 fps, +30 dB, white smooth bars, MP4 next to source
+set -e
+RES="3840x2160"; FPS=30; BOOST="30dB"; MODE="bar"
+
+usage(){ echo "Usage: visualize [-b dB] [-m line] [audio]"; exit 1; }
+
+while getopts ":b:m:h" o; do
+  case $o in
+    b) BOOST="${OPTARG}dB";;  m) MODE="$OPTARG";;
+    h) usage;; *) usage;;
+  esac
+done; shift $((OPTIND-1))
+
+AUDIO=${1:-}
+[ -z "$AUDIO" ] && AUDIO=$(osascript -e 'POSIX path of (choose file with prompt "Pick audio")')
+[ -f "$AUDIO" ] || { echo "File not found"; exit 1; }
+
+DIR=$(dirname "$AUDIO"); BASE=$(basename "$AUDIO"); OUT="$DIR/${BASE%.*}_viz.mp4"
+
+if [ "$MODE" = "line" ]; then
+  FILT="[0:a]volume=$BOOST,showwaves=s=$RES:mode=cline:rate=$FPS,format=yuv420p"
+else
+  FILT="[0:a]volume=$BOOST,showfreqs=s=$RES:mode=bar:fscale=log:ascale=lin:rate=$FPS:colors=0xffffff:overlap=0.7,tmix=frames=3:weights='1 1 1',boxblur=2,format=yuv420p"
+fi
+
+clear; echo "▶︎ Rendering → $OUT"; echo "   boost=$BOOST  mode=$MODE"
+ffmpeg -hide_banner -i "$AUDIO" -filter_complex "$FILT" \
+       -pix_fmt yuv420p -c:v libx264 -preset veryfast -crf 18 \
+       -movflags +faststart "$OUT" -stats
+
+echo -e "\n✅  Finished!  $OUT"
+read -n1 -s -r -p $'Press any key to close this window…'
