@@ -6,7 +6,7 @@ No ads • no telemetry • fully offline.
 ## Quick install
 
 \```bash
-curl -L https://github.com/YOUR_GITHUB_USER/visualizer/releases/latest/download/install_visualizer.sh | bash
+curl -L https://github.com/bouliehaan/visualizer/releases/latest/download/install_visualizer.sh | bash
 \```
 
 Requires **macOS 12+** and **FFmpeg** (`brew install ffmpeg`).
